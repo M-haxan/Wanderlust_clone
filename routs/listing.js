@@ -4,8 +4,30 @@ const wrapAsync = require("../utils/wrapAsync");
 const Listing = require("../models/listing.js");
 // All listings route
 router.get("/Listings", async (req, res) => {
-  const allListings = await Listing.find({});
-  res.render("./Listings/index.ejs", { allListings });
+  //const allListings = await Listing.find({});
+// 1️⃣ Current page number le lo (user se)
+  // URL se aata hai jaise: /Listings?page=2
+  const page = parseInt(req.query.page) || 1;  
+  // agar ?page= nahi diya gaya, to by default page 1
+
+  // 2️⃣ Kitni listings per page dikhani hain
+  const limit = 6;  
+
+  // 3️⃣ Kitni listings skip karni hain (formula)
+  // Suppose page 2 par ho, to (2-1)*6 = 6 skip karni hain
+  const skip = (page - 1) * limit;
+
+  // 4️⃣ Total documents count karo (for total pages)
+  const totalListings = await Listing.countDocuments();
+
+  // 5️⃣ Required listings lo, skip aur limit laga ke
+  const listings = await Listing.find({}).skip(skip).limit(limit);
+
+  // 6️⃣ Total pages calculate karo (for Next/Prev button)
+  const totalPages = Math.ceil(totalListings / limit);
+
+  // 7️⃣ Data bhejo EJS file me
+  res.render("./Listings/index.ejs", { allListings: listings, page, totalPages });
 });
 // Create New Liting route
 router.get("/Listings/new", (req, res)=>{
